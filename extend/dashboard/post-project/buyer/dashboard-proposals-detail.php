@@ -206,24 +206,21 @@ if( empty($project_type) ||$project_type === 'fixed') {
                     (!empty($project_type) && $project_type === 'fixed' && !empty($is_milestone) && $is_milestone === 'no' && !empty($project_status) && $project_status === 'publish' && !empty($proposal_status) && $proposal_status === 'publish' )){?>
                         <?php
                         // Use escrow hire button
-                        if (function_exists('mnt_escrow_hire_button')) {
-                            $proposal_price = !empty($proposal_meta['price']) ? floatval($proposal_meta['price']) : 0;
-                            mnt_escrow_hire_button(
-                                $project_id,
-                                $product_author_id,
-                                $proposal_price,
-                                [
-                                    'button_text' => sprintf(__('Hire "%s" with Secure Escrow', 'taskbot'), $user_name),
-                                    'button_class' => 'tk-btn-solid-lg-lefticon',
-                                    'icon' => '<i class="tb-icon-lock"></i>',
-                                    'show_balance' => true
-                                ]
-                            );
-                        } else {
-                            // Fallback to original button
-                            echo '<button class="tk-btn-solid-lg-lefticon ' . esc_attr($checkout_class) . '" data-key="" data-id="' . intval($proposal_id) . '">' . sprintf(esc_html__('Hire "%s"','taskbot'),$user_name) . '</button>';
-                        }
+                        $proposal_price = !empty($proposal_meta['price']) ? floatval($proposal_meta['price']) : 0;
+                        $escrow_page_url = get_permalink(get_page_by_path('create-escrow'));
+                        // Use merchant_id (seller), client_id (buyer), project_id, amount, proposal_id
+                        $escrow_url = add_query_arg([
+                            'merchant_id' => $product_author_id, // seller
+                            'client_id' => $user_identity, // buyer
+                            'project_id' => $project_id,
+                            'amount' => $proposal_price,
+                            'proposal_id' => $proposal_id
+                        ], $escrow_page_url);
                         ?>
+                        <a href="<?php echo esc_url($escrow_url); ?>" class="tk-btn-solid-lg-lefticon">
+                            <i class="tb-icon-lock"></i>
+                            <?php echo sprintf(__('Hire "%s" with Secure Escrow', 'taskbot'), $user_name); ?>
+                        </a>
             <?php } else {
                 do_action( 'taskbot_hire_proposal_button', $proposal_id );
             } ?>
