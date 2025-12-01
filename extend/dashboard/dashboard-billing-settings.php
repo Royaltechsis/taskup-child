@@ -96,14 +96,14 @@ if (class_exists('WooCommerce')) {
 	}
 	?>
 	
-	<?php 
-	// Display Transaction History with pagination and filters
-	if ($user_has_wallet && shortcode_exists('mnt_transaction_history')) {
-		echo '<div class="tb-dhb-box-wrapper tb-transaction-history-section">';
-		echo do_shortcode('[mnt_transaction_history]');
-		echo '</div>';
-	}
-	?>
+	   <?php 
+	   // Display Transaction History with pagination and filters
+	   if ($user_has_wallet && shortcode_exists('mnt_transaction_history')) {
+		   echo '<div class="tb-dhb-box-wrapper tb-transaction-history-section">';
+		   echo do_shortcode('[mnt_transaction_history]');
+		   echo '</div>';
+	   }
+	   ?>
 	
 	<div class="tb-dhb-box-wrapper">
 		<form class="tb-billing-user-form tb-themeform tb-profileform">
