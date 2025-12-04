@@ -157,24 +157,22 @@ if( empty($project_type) ||$project_type === 'fixed') {
                                 <?php if( !empty($project_status) && $project_status === 'publish' && !empty($proposal_status) && $proposal_status === 'publish' ){?>
                                     <div class="tk-statusview_btns">
                                         <?php
-                                        // Use escrow for milestone payment
-                                        if (function_exists('mnt_escrow_hire_button')) {
-                                            mnt_escrow_hire_button(
-                                                $project_id,
-                                                $product_author_id,
-                                                $price,
-                                                [
-                                                    'button_text' => __('Pay & Hire with Escrow', 'taskbot'),
-                                                    'button_class' => 'tk-btnline',
-                                                    'icon' => '<i class="tb-icon-lock"></i>',
-                                                    'show_balance' => false
-                                                ]
-                                            );
-                                        } else {
-                                            // Fallback to original button
-                                            echo '<button class="tk-btnline ' . esc_attr($checkout_class) . '" data-key="' . esc_attr($key) . '" data-id="' . intval($proposal_id) . '">' . sprintf(esc_html__('Pay and hire','taskbot'),$user_name) . '</button>';
-                                        }
+                                        // Use escrow for milestone payment - redirect to create-escrow page
+                                        $escrow_page_url = get_permalink(get_page_by_path('create-escrow'));
+                                        $milestone_escrow_url = add_query_arg([
+                                            'merchant_id' => $product_author_id, // seller
+                                            'client_id' => $user_identity, // buyer
+                                            'project_id' => $project_id,
+                                            'amount' => floatval($price),
+                                            'proposal_id' => $proposal_id,
+                                            'milestone_key' => $key,
+                                            'milestone_title' => urlencode($title)
+                                        ], $escrow_page_url);
                                         ?>
+                                        <a href="<?php echo esc_url($milestone_escrow_url); ?>" class="tk-btnline">
+                                            <i class="tb-icon-lock"></i>
+                                            <?php esc_html_e('Pay & Hire with Escrow', 'taskbot'); ?>
+                                        </a>
                                     </div>
                                 <?php } ?>
                             </div>
