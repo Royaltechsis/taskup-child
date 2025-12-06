@@ -130,7 +130,11 @@
                             <?php if( !empty($proposal_status) && $proposal_status === 'hired' ){?>
                                 <?php if( !empty($status) && $status === 'requested' ){?>
                                     <div class="tk-statusview_btns">
-                                        <span class="tk-btn_approve tb_update_milestone" data-status="completed" data-id="<?php echo intval($proposal_id);?>" data-key="<?php echo esc_attr($key);?>"><?php esc_html_e('Approve','taskbot');?></span>
+                                        <span class="tk-btn_approve tb_update_milestone" 
+                                              data-status="completed" 
+                                              data-id="<?php echo intval($proposal_id);?>" 
+                                              data-key="<?php echo esc_attr($key);?>"
+                                              data-project-id="<?php echo intval($project_id);?>"><?php esc_html_e('Approve','taskbot');?></span>
                                         <span class="tk-btn_decline" data-bs-target="#tb_milestone_declinereason-<?php echo esc_attr($key);?>" data-bs-toggle="modal" ><?php esc_html_e('Decline','taskbot');?></span>
                                     </div>
                                     <div class="modal fade tk-declinereason" id="tb_milestone_declinereason-<?php echo esc_attr($key);?>" tabindex="-1" aria-hidden="true">
