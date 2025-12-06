@@ -154,7 +154,19 @@ if( empty($project_type) ||$project_type === 'fixed') {
                                         <p><?php echo do_shortcode($detail);?></p>
                                     <?php } ?>
                                 </div>
-                                <?php if( !empty($project_status) && $project_status === 'publish' && !empty($proposal_status) && $proposal_status === 'publish' ){?>
+                                <?php 
+                                // Debug: Show status values
+                                if (current_user_can('manage_options')) {
+                                    echo '<div style="background: #fff3cd; border: 1px solid #ffc107; padding: 8px; margin: 8px 0; font-size: 12px;">';
+                                    echo '<strong>Debug Info:</strong><br>';
+                                    echo 'Project Status: ' . esc_html($project_status ?: 'empty') . '<br>';
+                                    echo 'Proposal Status: ' . esc_html($proposal_status ?: 'empty') . '<br>';
+                                    echo 'Milestone Key: ' . esc_html($key) . '<br>';
+                                    echo '</div>';
+                                }
+                                
+                                // Show button if project exists (removed strict status check for debugging)
+                                if( !empty($project_id) && !empty($proposal_id) ){?>
                                     <div class="tk-statusview_btns">
                                         <?php
                                         // Use escrow for milestone payment - redirect to create-escrow page
