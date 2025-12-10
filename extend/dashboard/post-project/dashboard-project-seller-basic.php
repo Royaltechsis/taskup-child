@@ -63,13 +63,13 @@ do_action('taskbot_project_completed_form',$args);
             ?>
         </strong>
         <!-- DEBUG INFO -->
-        <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border: 2px solid red;">
+        <!-- <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border: 2px solid red;">
             <strong>DEBUG:</strong><br>
             Current User ID: <?php echo $current_user_id; ?><br>
             Seller ID: <?php echo $seller_id; ?><br>
             Proposal Status: <?php echo $proposal_status; ?><br>
             Show Button: <?php echo $show_release_button ? 'YES' : 'NO'; ?>
-        </div>
+        </div> -->
         <!-- END DEBUG -->
         <?php if($show_release_button) { ?>
             <button 

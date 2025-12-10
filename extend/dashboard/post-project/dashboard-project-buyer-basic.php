@@ -59,31 +59,31 @@ $milestone_total= isset($args['milestone_total']) ? esc_attr($args['milestone_to
         // Check if we should show the release funds button
         $show_release_button = ($proposal_status === 'completed' && $is_seller);
         ?>
-        <?php if($show_release_button) { ?>
-            <button 
-                id="mnt-release-funds-btn" 
-                class="tk-btn-solid-lg" 
-                data-project-id="<?php echo esc_attr($project_id); ?>" 
-                data-seller-id="<?php echo esc_attr($seller_id); ?>"
-                style="margin-top: 10px; width: 70%; background-color: #28a745; border-color: #28a745;">
-                <i class="tb-icon-dollar-sign"></i> <?php esc_html_e('Release Funds', 'taskbot'); ?>
-            </button>
-            <div id="mnt-release-funds-message" style="margin-top: 10px; display: none;"></div>
-        <?php } ?>
+        <?php // if($show_release_button) { ?>
+        <!-- <button 
+            id="mnt-release-funds-btn" 
+            class="tk-btn-solid-lg" 
+            data-project-id="<?php echo esc_attr($project_id); ?>" 
+            data-seller-id="<?php echo esc_attr($seller_id); ?>"
+            style="margin-top: 10px; width: 70%; background-color: #28a745; border-color: #28a745;">
+            <i class="tb-icon-dollar-sign"></i> <?php esc_html_e('Release Funds', 'taskbot'); ?>
+        </button>
+        <div id="mnt-release-funds-message" style="margin-top: 10px; display: none;"></div> -->
+        <?php // } ?>
         <?php if( !empty($proposal_status) && in_array($proposal_status,array('hired')) ){?>
             <div class="tk-projectsstatus_option">
                 <a href="javascript:void(0);"><i class="tb-icon-more-horizontal"></i></a>
                 <ul class="tk-contract-list">
-                    <?php if($has_escrow && $is_seller) { ?>
-                    <li>
+                    <?php // if($has_escrow && $is_seller) { ?>
+                    <!-- <li>
                         <span class="mnt-merchant-confirm-completion" 
                               data-project-id="<?php echo esc_attr($project_id); ?>" 
                               data-user-id="<?php echo esc_attr($user_identity); ?>"
                               style="color: #28a745; font-weight: 600; cursor: pointer;">
                             <i class="tb-icon-check-circle"></i> <?php esc_html_e('Confirm Project Completion', 'taskbot'); ?>
                         </span>
-                    </li>
-                    <?php } ?>
+                    </li> -->
+                    <?php // } ?>
                     <li>
                         <span id="taskrefundrequest"><?php esc_html_e('Raise a dispute','taskbot');?></span>
                     </li>
