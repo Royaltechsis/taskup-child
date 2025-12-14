@@ -13,40 +13,76 @@ $user_type      = !empty($args['user_type']) ? esc_attr($args['user_type']) : ''
 
 // Fetch escrow transactions for this specific project
 $escrow_transactions = array();
-if (class_exists('MNT_Escrow\Api\Escrow')) {
+$debug_info = array(
+    'class_exists_mnt_escrow' => class_exists('MNT_Escrow\Api\Escrow'),
+    'class_exists_mnt' => class_exists('MNT\Api\Escrow'),
+    'user_identity' => $user_identity,
+    'user_type' => $user_type,
+    'project_id' => $project_id,
+    'seller_id' => $seller_id,
+    'buyer_id' => $buyer_id,
+    'api_role' => ($user_type === 'sellers') ? 'merchant' : 'client'
+);
+
+if (class_exists('MNT\Api\Escrow')) {
+    // Determine actor based on user type
+    $actor = ($user_type === 'sellers') ? 'merchant' : 'client';
+    
     // Get all transactions for the user
-    $all_transactions = \MNT_Escrow\Api\Escrow::get_all_transactions($user_identity, $user_type === 'sellers' ? 'merchant' : 'client');
+    $all_transactions = \MNT\Api\Escrow::get_all_transactions($user_identity, $actor);
+    
+    $debug_info['all_transactions_raw'] = $all_transactions;
+    $debug_info['is_array'] = is_array($all_transactions);
+    $debug_info['empty_check'] = empty($all_transactions);
     
     if (!empty($all_transactions) && is_array($all_transactions)) {
-        // Handle different response formats
+        // The API returns a direct array of transactions
         $transactions = $all_transactions;
-        if (isset($all_transactions['transactions']) && is_array($all_transactions['transactions'])) {
-            $transactions = $all_transactions['transactions'];
-        } elseif (isset($all_transactions['data']) && is_array($all_transactions['data'])) {
-            $transactions = $all_transactions['data'];
-        }
+        
+        $debug_info['transactions_count'] = count($transactions);
+        $debug_info['sample_transaction'] = !empty($transactions) ? reset($transactions) : 'no transactions';
         
         // Filter to only show transactions for this project
         foreach ($transactions as $transaction) {
-            if (isset($transaction['project_id']) && intval($transaction['project_id']) === $project_id) {
+            $trans_project_id = isset($transaction['project_id']) ? intval($transaction['project_id']) : 0;
+            $debug_info['checking_project_id'][] = $trans_project_id . ' vs ' . $project_id;
+            
+            if ($trans_project_id === $project_id) {
                 $escrow_transactions[] = $transaction;
             }
         }
+        
+        $debug_info['filtered_count'] = count($escrow_transactions);
+    } else {
+        $debug_info['error'] = 'API returned empty or non-array response';
     }
+} else {
+    $debug_info['error'] = 'Escrow class does not exist';
 }
 
 // Sort by date descending (newest first)
-usort($escrow_transactions, function($a, $b) {
-    $date_a = strtotime($a['created_at'] ?? '');
-    $date_b = strtotime($b['created_at'] ?? '');
-    return $date_b - $date_a;
-});
+if (!empty($escrow_transactions)) {
+    usort($escrow_transactions, function($a, $b) {
+        $date_a = strtotime($a['created_at'] ?? '');
+        $date_b = strtotime($b['created_at'] ?? '');
+        return $date_b - $date_a;
+    });
+}
 ?>
 <div class="tab-pane fade" id="proposal-invoices" role="tabpanel" aria-labelledby="proposal-invoices-tab">
     <div class="tk-proinvoices">
         <div class="tk-proinvoices_title">
             <h5><?php esc_html_e('Escrow Transaction History','taskbot');?></h5>
         </div>
+        
+        <!-- Debug Information -->
+       <!--  <div style="background: #f0f0f0; padding: 15px; margin: 10px 0; border: 2px solid #333; font-size: 12px;">
+            <strong>Debug Info:</strong><br>
+            <pre><?php echo esc_html(print_r($debug_info, true)); ?></pre>
+            <strong>Escrow Transactions:</strong><br>
+            <pre><?php echo esc_html(print_r($escrow_transactions, true)); ?></pre>
+        </div> -->
+        
         <table class="table tk-proinvoices_table tb-table">
             <thead>
                 <tr>
