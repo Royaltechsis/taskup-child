@@ -64,15 +64,34 @@ $taskbot_add_service_page_url = !empty($taskbot_settings['tpl_add_service_page']
 // Seller counters: In Queue, Completed, Cancelled
 $seller_id = ! empty( $user_identity ) ? intval( $user_identity ) : intval( $current_user->ID );
 $count_inqueue = $count_completed = $count_cancelled = 0;
+// Treat several statuses as "ongoing" so In Queue reflects active/hired tasks
+$ongoing_statuses = array( 'inqueue', 'hired', 'in_progress', 'pending' );
 if ( class_exists('\MNT\UI\Init') ) {
-    $count_inqueue   = intval( count( \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'inqueue' ) ) );
+    // Collect IDs for multiple statuses and combine them (remove duplicates)
+    $inqueue_ids = (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'inqueue' );
+    $hired_ids = (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'hired' );
+    $inprog_ids = (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'in_progress' );
+    $pending_ids = (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'pending' );
+    $ongoing_ids = array_values( array_unique( array_merge( $inqueue_ids, $hired_ids, $inprog_ids, $pending_ids ) ) );
+    $count_inqueue   = intval( count( $ongoing_ids ) );
     $count_completed = intval( count( \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'completed' ) ) );
     $count_cancelled = intval( count( \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'cancelled' ) ) );
-        // Build per-product maps for faster per-task counts in the loop
+    // Admin debug: expose counts for each status to help diagnose mismatches
+    if ( current_user_can('manage_options') ) {
+        $debug_counts = array(
+            'inqueue' => intval( count( (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'inqueue' ) ) ),
+            'hired' => intval( count( (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'hired' ) ) ),
+            'in_progress' => intval( count( (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'in_progress' ) ) ),
+            'pending' => intval( count( (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'pending' ) ) ),
+            'completed' => intval( count( (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'completed' ) ) ),
+            'cancelled' => intval( count( (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'cancelled' ) ) ),
+        );
+        echo '<div class="tb-admin-debug" style="font-size:12px;color:#666;margin-bottom:8px;">Status counts: ' . esc_html( json_encode($debug_counts) ) . '</div>';
+    }
+        // Build per-product maps for faster per-task counts in the loop (use combined ongoing IDs)
         $map_inqueue = $map_completed = $map_cancelled = array();
-        $orders = \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'inqueue' );
-        if ( is_array( $orders ) ) {
-            foreach ( $orders as $o ) {
+        if ( is_array( $ongoing_ids ) ) {
+            foreach ( $ongoing_ids as $o ) {
                 $pid = get_post_meta( $o, '_mnt_task_id', true ) ?: get_post_meta( $o, 'task_product_id', true );
                 $pid = intval( $pid );
                 if ( $pid ) $map_inqueue[ $pid ] = ( ! empty( $map_inqueue[ $pid ] ) ? $map_inqueue[ $pid ] : 0 ) + 1;
@@ -110,9 +129,15 @@ if ( class_exists('\MNT\UI\Init') ) {
             ),
         ),
     );
-    // Inqueue
+    // Inqueue (treat multiple statuses as ongoing/hired)
     $args = $base_args;
-    $args['meta_query'][] = array( 'key' => '_task_status', 'value' => 'inqueue', 'compare' => '=' );
+    $args['meta_query'][] = array(
+        'relation' => 'OR',
+        array( 'key' => '_task_status', 'value' => 'inqueue', 'compare' => '=' ),
+        array( 'key' => '_task_status', 'value' => 'hired', 'compare' => '=' ),
+        array( 'key' => '_task_status', 'value' => 'in_progress', 'compare' => '=' ),
+        array( 'key' => '_task_status', 'value' => 'pending', 'compare' => '=' ),
+    );
     $posts = get_posts( $args );
     $map_inqueue = array();
     if ( is_array( $posts ) ) {
@@ -233,7 +258,13 @@ if ( $taskbot_query->have_posts() ) :
                                     // Debug: list actual order IDs contributing to these counts for this product
                                     $debug_in = $debug_comp = $debug_can = array();
                                     if ( class_exists('\MNT\\UI\\Init') ) {
-                                        $ords = \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'inqueue' );
+                                        // Debug: check multiple statuses that count as "In Queue"/ongoing
+                                        $ords = array_merge(
+                                            (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'inqueue' ),
+                                            (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'hired' ),
+                                            (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'in_progress' ),
+                                            (array) \MNT\UI\Init::mnt_get_seller_task_orders( $seller_id, 'pending' )
+                                        );
                                         if ( is_array( $ords ) ) {
                                             foreach ( $ords as $o ) {
                                                 $opid = get_post_meta( $o, '_mnt_task_id', true ) ?: get_post_meta( $o, 'task_product_id', true );
@@ -262,7 +293,7 @@ if ( $taskbot_query->have_posts() ) :
                                             $ts = get_post_meta($o,'_task_status',true);
                                             $opid = get_post_meta( $o, '_mnt_task_id', true ) ?: get_post_meta( $o, 'task_product_id', true );
                                             if ( intval($opid) !== $product_id ) continue;
-                                            if ( $ts === 'inqueue' ) $debug_in[] = $o . '=>'.intval($opid);
+                                            if ( in_array($ts, array('inqueue','hired','in_progress','pending')) ) $debug_in[] = $o . '=>'.intval($opid);
                                             if ( $ts === 'completed' ) $debug_comp[] = $o . '=>'.intval($opid);
                                             if ( $ts === 'cancelled' ) $debug_can[] = $o . '=>'.intval($opid);
                                         }
